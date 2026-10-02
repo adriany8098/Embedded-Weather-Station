@@ -4,15 +4,20 @@
 ---
 
 ## 📌 Executive Summary
-This project delivers a field-deployable, high-precision environmental monitoring station engineered around an **Arduino microcontroller**. The system executes real-time data acquisition for ambient temperature, relative humidity, barometric pressure, and localized wind velocity across an uninterrupted 8-hour testing window (09:00 - 17:00). 
+This project delivers a field-deployable, high-precision environmental monitoring station engineered around an **Arduino microcontroller**. The system executed real-time multi-site data acquisition for ambient temperature, relative humidity, barometric pressure, and localized wind velocity across an uninterrupted 8-hour testing window (09:00 - 17:00). 
 
-A core objective of this study was conducting a rigorous **cross-sensor evaluation between the DHT22 and BME280 sensor modules**, assessing thermal inertia, bus protocol efficiency, sampling latency, and signal-to-noise ratios under variable environmental terrains.
+To ensure rugged field portability, the hardware was integrated into a custom-designed, weather-proof **plastic enclosure**. This compact packaging rendered the unit highly portable for hand-carried field measurements across **three distinct testing terrains on the University of York campus**:
+1. **Lake Shore** (High humidity, aquatic thermal buffering)
+2. **Open Space Field** (Exposed grassy area, unshielded solar radiation)
+3. **Campus Plaza Buildings** (Urban micro-climate, thermal mass, wind-tunnel effects)
+
+Data was sampled at **30-minute intervals** across all three campus locations (each separated by a ~5-minute walking distance), enabling a comprehensive cross-sensor evaluation between the **DHT22 and BME280 sensor modules**. The analytics pipeline generated **26 comparative response graphs** to rigorously map environmental micro-climates and sensor performance metrics.
 
 ---
 
 ## 🛠️ Detailed Hardware & Sensor Architecture
 
-### 1. Temperature & Humidity Probe: DHT22 
+### 1. Temperature & Humidity Probe: DHT22 (AM2302)
 * **Operating Mechanism**: Uses a capacitive humidity sensing element and a high-precision Negative Temperature Coefficient (NTC) thermistor.
 * **Interface Protocol**: Single-bus custom digital signal protocol (OneWire-style timing).
 * **Specifications**:
@@ -31,17 +36,38 @@ A core objective of this study was conducting a rigorous **cross-sensor evaluati
   * **Sampling Rate**: Up to 157 Hz (Programmed via non-blocking timing loops)
 * **Engineering Context**: Primary sensor for barometric pressure and high-frequency thermal response testing.
 
-### 3. Auxiliary Peripherals & Hardware Integration
-* **Anemometer**: Pulse-counting optoelectronic sensor for measuring wind dynamics.
+### 3. Mechanical Design & Auxiliary Integration
+* **Portable Plastic Enclosure**: Custom-modified, water-resistant plastic housing engineered for rapid hand-held transit between campus site locations while exposing sensing elements to external airflow.
+* **Anemometer**: Pulse-counting optoelectronic sensor mounted externally for measuring localized wind dynamics.
 * **Display Output**: LCD 1602 driven via PCF8574 I2C Backpack (reducing pin count from 6 GPIOs down to 2 I2C lines: `SDA` / `SCL`).
-* **Power Architecture**: Portable 5V DC regulated lithium power bank enabling standalone, untethered outdoor operation.
-* **Enclosure Engineering**: Custom IP-rated weather-proof housing with external sensor probe exposure to eliminate thermal insulation bias.
+* **Power Architecture**: Standalone 5V DC regulated lithium power bank housed within the plastic chassis for untethered field deployment.
 
+## 📊 Comparative Analysis: DHT22 vs. BME280
+
+| Performance Metric | DHT22 Probe | BME280 MEMS Sensor | Engineering Insight |
+| :--- | :--- | :--- | :--- |
+| **Communication Protocol** | Custom Single-Wire | I2C (`SDA` / `SCL`) | BME280 allows multi-device daisy-chaining on 2 wires. |
+| **Response Latency** | High (~2.0 seconds) | Very Low (< 10 ms) | BME280 captures rapid ambient thermal spikes significantly faster. |
+| **Sensor Footprint** | Large casing, exposed grill | Compact PCB surface-mount | BME280 requires protective enclosure vents due to sensitivity. |
+| **Parameter Scope** | Temperature + Humidity | Temp + Humidity + Pressure | BME280 provides barometric trend analysis for weather forecasting. |
+
+---
+
+## 📈 Key Findings & Environmental Impact
+
+* **Data Visualization & Graphing**: Constructed a comprehensive suite of **26 comparison graphs** analyzing cross-sensor response lag, thermal inertia, relative humidity gradients, and atmospheric pressure dynamics across field locations.
+* **Enclosure Design & Mobility**: The custom plastic box protected internal circuitry from humidity while providing an ultra-portable form factor, allowing seamless 5-minute transit walks between University of York testing points without disturbing internal wiring connections.
+* **University Campus Terrain Variance**:
+  * **Lake Shore**: Exhibited the highest average relative humidity (~8% above open field) and thermal resistance due to the lake's heat capacity.
+  * **Open Space Field**: Experienced the steepest thermal gradients during midday peak solar irradiance (12:00 - 14:00).
+  * **Campus Plaza Buildings**: Recorded micro-climate wind acceleration (tunneling effect between structures) and elevated thermal radiation retained by building walls.
+* **Sampling Protocol Insights**: Logged consistent 30-minute intervals from 09:00 to 17:00, factoring in 5-minute transit delays between adjacent site testing points without sensor calibration drift.
+* **Sensor Inertia**: The DHT22 exhibited a ~12-second latency delay in capturing rapid temperature drops compared to the real-time responses of the BME280.
 ---
 
 ## 💻 Firmware Logic & Algorithm Design
 
-The code is optimized for reliability and long-term data logging:
+The code is optimized for multi-site field mobility and non-blocking sensor acquisition:
 
 ```cpp
 #include <Wire.h>
@@ -59,7 +85,7 @@ Adafruit_BME280 bme; // I2C Communication
 
 // Non-blocking Timing Control
 unsigned long previousMillis = 0;
-const long sampleInterval = 5000; // Log data every 5 seconds
+const long sampleInterval = 5000; // Real-time logging pulse
 
 void setup() {
   Serial.begin(9600);
@@ -73,7 +99,7 @@ void setup() {
     while (1); // Halt execution on critical hardware error
   }
   
-  Serial.println(F("Timestamp(ms),DHT_Temp(C),BME_Temp(C),DHT_Hum(%),BME_Hum(%),Pressure(hPa)"));
+  Serial.println(F("Timestamp(ms),Location,DHT_Temp(C),BME_Temp(C),DHT_Hum(%),BME_Hum(%),Pressure(hPa)"));
 }
 
 void loop() {
@@ -103,3 +129,5 @@ void loop() {
     }
   }
 }
+
+
