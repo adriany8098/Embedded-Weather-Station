@@ -12,7 +12,7 @@ A core objective of this study was conducting a rigorous **cross-sensor evaluati
 
 ## 🛠️ Detailed Hardware & Sensor Architecture
 
-### 1. Temperature & Humidity Probe: DHT22 (AM2302)
+### 1. Temperature & Humidity Probe: DHT22 
 * **Operating Mechanism**: Uses a capacitive humidity sensing element and a high-precision Negative Temperature Coefficient (NTC) thermistor.
 * **Interface Protocol**: Single-bus custom digital signal protocol (OneWire-style timing).
 * **Specifications**:
